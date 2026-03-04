@@ -27,9 +27,9 @@ public class OpenHash {
         this.table = new Node[m + 1];  // indices 1 to m (ignore index 0)
         this.size = 0;
     }
-    // Initialize each slot with an empty linked list
-        for (int i = 1; i <= m; i++) {
-            table[i] = new LinkedList<>();
+        // Initialize each slot with an empty linked list
+    for (int i = 1; i <= m; i++) {
+        table[i] = new LinkedList<>();
         }
     }
 
@@ -71,7 +71,7 @@ public class OpenHash {
         }
         return null;  // Not found
     }
-// Check if key is in table
+    // Check if key is in table
     public boolean isInTable(int key) {
         return lookup(key) != null;
     }
@@ -90,6 +90,8 @@ public class OpenHash {
         }
         size = 0;
     }
-}
+)
+
+
 
 
