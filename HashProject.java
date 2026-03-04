@@ -22,4 +22,13 @@ public class DataGenerator {
             this.value = value;
         }
     }
+    // Generate all data
+    public static Pair[] generateData() {
+        System.out.println("Generating " + N + " key-value pairs...");
+
+        // Create array of keys 1 to N
+        Integer[] keys = new Integer[N];
+        for (int i = 0; i < N; i++) {
+            keys[i] = i + 1;
+        }
     }
