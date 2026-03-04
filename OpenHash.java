@@ -52,4 +52,10 @@ public class OpenHash {
                 return;
             }
         }
+         }
+
+        // Key not found - add new node to the END of the list
+        chain.add(new Node(key, value));
+        size++;
+    }
 
