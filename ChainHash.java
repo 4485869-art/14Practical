@@ -7,3 +7,9 @@ public class ChainedHash {
     private static class Node {
         int key;
         String value;
+        
+        Node(int key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
