@@ -1,0 +1,2 @@
+# 14Practical
+Hashing method
