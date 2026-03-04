@@ -27,4 +27,29 @@ public class OpenHash {
         this.table = new Node[m + 1];  // indices 1 to m (ignore index 0)
         this.size = 0;
     }
+    // Initialize each slot with an empty linked list
+        for (int i = 1; i <= m; i++) {
+            table[i] = new LinkedList<>();
+        }
+    }
+
+    // Hash function - same as open hashing
+    private int hash(int key) {
+        return (key % m) + 1;
+        
+    }
+
+    // Insert a key-value pair
+    public void insert(int key, String value) {
+        int index = hash(key);
+        LinkedList<Node> chain = table[index];
+
+        // Check if key already exists in this chain
+        for (Node node : chain) {
+            if (node.key == key) {
+                // Found it - update value
+                node.value = value;
+                return;
+            }
+        }
 
