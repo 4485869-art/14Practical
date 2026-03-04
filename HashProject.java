@@ -32,3 +32,8 @@ public class DataGenerator {
             keys[i] = i + 1;
         }
     }
+    // Shuffle the keys
+        List<Integer> keyList = Arrays.asList(keys);
+        Collections.shuffle(keyList);
+        keys = keyList.toArray(new Integer[0]);
+
