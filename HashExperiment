@@ -1,8 +1,7 @@
-// HashingExperiment.java - DEBUG VERSION
 import java.text.DecimalFormat;
 import java.util.*;
 
-public class HashingExperiment {
+public class HashExperiment {
 
     private static final int REPETITIONS = 30;
     private static final int LOOKUPS_PER_RUN = 10000;
