@@ -1,88 +1,94 @@
 // ChainedHash.java
 import java.util.LinkedList;
 
-public class ChainedHash {
+public class ChainHash {
 
-    // Node class to store key-value pairs
     private static class Node {
         int key;
         String value;
-        
+
         Node(int key, String value) {
             this.key = key;
             this.value = value;
         }
     }
-        }
 
-    private LinkedList<Node>[] table;  // Array of linked lists
-    private int m;                       // Table size
-    private int size;                     // Number of items inserted
+    private LinkedList<Node>[] table;
+    private int m;
+    private int size;
 
-    // Construct
     @SuppressWarnings("unchecked")
-    public ChainedHash(int tableSize) {
+    public ChainHash(int tableSize) {
         this.m = tableSize;
-        this.table = new LinkedList[m + 1];  // indices 1 to m
+        this.table = new LinkedList[m + 1];
         this.size = 0;
 
-        // Initialize each slot with an empty linked list
         for (int i = 1; i <= m; i++) {
             table[i] = new LinkedList<>();
         }
     }
 
-    
-    // Hash function - same as open hashing
     private int hash(int key) {
-        return (key % m) + 1;
+        int h = Integer.hashCode(key);
+        h ^= (h >>> 16);
+        return (Math.abs(h) % m) + 1;
     }
 
-    // Insert a key-value pair
     public void insert(int key, String value) {
-        int index = hash(key);
-        LinkedList<Node> chain = table[index];
-        
 
-        // Check if key already exists in this chain
-        for (Node node : chain) {
+        int index = hash(key);
+
+        for (Node node : table[index]) {
             if (node.key == key) {
-                // Found it - update value
                 node.value = value;
                 return;
             }
         }
 
-        // Key not found - add new node to the END of the list
-        chain.add(new Node(key, value));
+        table[index].addLast(new Node(key, value));
         size++;
     }
 
-    // Look up a key and return its value
     public String lookup(int key) {
-        int index = hash(key);
-        LinkedList<Node> chain = table[index];
 
-        // Search the chain
-        for (Node node : chain) {
+        int index = hash(key);
+
+        for (Node node : table[index]) {
             if (node.key == key) {
-                return node.value;  // Found it
+                return node.value;
             }
         }
-        return null;  // Not found
+
+        return null;
     }
 
-    // Check if key is in table
+    public String remove(int key) {
+
+        int index = hash(key);
+
+        for (Node node : table[index]) {
+            if (node.key == key) {
+                table[index].remove(node);
+                size--;
+                return node.value;
+            }
+        }
+
+        return null;
+    }
+
     public boolean isInTable(int key) {
         return lookup(key) != null;
     }
 
-    // Get current load factor
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
     public double loadFactor() {
         return (double) size / m;
     }
 
-    // Clear the table for new experiment
     @SuppressWarnings("unchecked")
     public void clear() {
         table = new LinkedList[m + 1];
@@ -92,7 +98,3 @@ public class ChainedHash {
         size = 0;
     }
 }
-
-
-
-
