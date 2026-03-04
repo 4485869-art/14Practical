@@ -31,3 +31,16 @@ public class ChainedHash {
             table[i] = new LinkedList<>();
         }
     }
+
+    
+    // Hash function - same as open hashing
+    private int hash(int key) {
+        return (key % m) + 1;
+    }
+
+    // Insert a key-value pair
+    public void insert(int key, String value) {
+        int index = hash(key);
+        LinkedList<Node> chain = table[index];
+
+
