@@ -42,5 +42,16 @@ public class ChainedHash {
     public void insert(int key, String value) {
         int index = hash(key);
         LinkedList<Node> chain = table[index];
+        
+
+        // Check if key already exists in this chain
+        for (Node node : chain) {
+            if (node.key == key) {
+                // Found it - update value
+                node.value = value;
+                return;
+            }
+        }
+
 
 
