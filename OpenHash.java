@@ -17,4 +17,14 @@ public class OpenHash {
             this.value = value;
         }
     }
+    private Node[] table;  // The hash table array
+    private int m;          // Table size
+    private int size;       // Number of items inserted
+
+    // Constructor
+    public OpenHash(int tableSize) {
+        this.m = tableSize;
+        this.table = new Node[m + 1];  // indices 1 to m (ignore index 0)
+        this.size = 0;
+    }
 
