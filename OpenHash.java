@@ -2,96 +2,115 @@
 // OpenHash.java
 public class OpenHash {
 
-    // Node class to store key-value pairs
     private static class Node {
         int key;
         String value;
-
-        Node(int key, String value) {
-            this.key = key;
-            this.value;
-            
+        boolean deleted;
 
         Node(int key, String value) {
             this.key = key;
             this.value = value;
+            this.deleted = false;
         }
     }
-    private Node[] table;  // The hash table array
-    private int m;          // Table size
-    private int size;       // Number of items inserted
 
-    // Constructor
+    private Node[] table;
+    private int m;
+    private int size;
+
     public OpenHash(int tableSize) {
         this.m = tableSize;
-        this.table = new Node[m + 1];  // indices 1 to m (ignore index 0)
+        this.table = new Node[m + 1];  // indices 1..m
         this.size = 0;
     }
-        // Initialize each slot with an empty linked list
-    for (int i = 1; i <= m; i++) {
-        table[i] = new LinkedList<>();
-        }
-    }
 
-    // Hash function - same as open hashing
     private int hash(int key) {
-        return (key % m) + 1;
-        
+        int h = Integer.hashCode(key);
+        h ^= (h >>> 16);     // bit mixing
+        return (Math.abs(h) % m) + 1;
     }
 
-    // Insert a key-value pair
     public void insert(int key, String value) {
-        int index = hash(key);
-        LinkedList<Node> chain = table[index];
 
-        // Check if key already exists in this chain
-        for (Node node : chain) {
-            if (node.key == key) {
-                // Found it - update value
-                node.value = value;
+        int index = hash(key);
+        int start = index;
+
+        while (table[index] != null && !table[index].deleted) {
+
+            if (table[index].key == key) {
+                table[index].value = value;
                 return;
             }
-        }
-         }
 
-        // Key not found - add new node to the END of the list
-        chain.add(new Node(key, value));
-        size++;
-    }
-    // Look up a key and return its value
-    public String lookup(int key) {
-        int index = hash(key);
-        LinkedList<Node> chain = table[index];
+            index = (index % m) + 1;
 
-        // Search the chain
-        for (Node node : chain) {
-            if (node.key == key) {
-                return node.value;  // Found it
+            if (index == start) {
+                throw new RuntimeException("Table full");
             }
         }
-        return null;  // Not found
+
+        table[index] = new Node(key, value);
+        size++;
     }
-    // Check if key is in table
+
+    public String lookup(int key) {
+
+        int index = hash(key);
+        int start = index;
+
+        while (table[index] != null) {
+
+            if (!table[index].deleted && table[index].key == key) {
+                return table[index].value;
+            }
+
+            index = (index % m) + 1;
+
+            if (index == start) break;
+        }
+
+        return null;
+    }
+
+    public String remove(int key) {
+
+        int index = hash(key);
+        int start = index;
+
+        while (table[index] != null) {
+
+            if (!table[index].deleted && table[index].key == key) {
+                table[index].deleted = true;
+                size--;
+                return table[index].value;
+            }
+
+            index = (index % m) + 1;
+
+            if (index == start) break;
+        }
+
+        return null;
+    }
+
     public boolean isInTable(int key) {
         return lookup(key) != null;
     }
 
-    // Get current load factor
+    public boolean isFull() {
+        return size == m;
+    }
+
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
     public double loadFactor() {
         return (double) size / m;
     }
 
-    // Clear the table for new experiment
-    @SuppressWarnings("unchecked")
     public void clear() {
-        table = new LinkedList[m + 1];
-        for (int i = 1; i <= m; i++) {
-            table[i] = new LinkedList<>();
-        }
+        table = new Node[m + 1];
         size = 0;
     }
-)
-
-
-
-
+}
