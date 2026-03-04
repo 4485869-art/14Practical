@@ -45,3 +45,8 @@ public class DataGenerator {
         System.out.println("Done generating data");
         return data;
     }
+    // Get first K elements
+    public static Pair[] getFirstK(Pair[] data, int k) {
+        return Arrays.copyOfRange(data, 0, k);
+    }
+}
