@@ -36,4 +36,12 @@ public class DataGenerator {
         List<Integer> keyList = Arrays.asList(keys);
         Collections.shuffle(keyList);
         keys = keyList.toArray(new Integer[0]);
+ // Create pairs
+        Pair[] data = new Pair[N];
+        for (int i = 0; i < N; i++) {
+            data[i] = new Pair(keys[i], String.valueOf(i + 1));
+        }
 
+        System.out.println("Done generating data");
+        return data;
+    }
