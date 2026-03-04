@@ -1,158 +1,81 @@
 // HashingExperiment.java - DEBUG VERSION
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
 
 public class HashingExperiment {
 
+    private static final int REPETITIONS = 30;
+    private static final int LOOKUPS_PER_RUN = 10000;
+
     public static void main(String[] args) {
-        // Fix the comma/decimal point issue
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
-        DecimalFormat df = new DecimalFormat("0.00000", symbols);
 
-        System.out.println("==================================================");
-        System.out.println("HASHING PERFORMANCE COMPARISON EXPERIMENT");
-        System.out.println("==================================================");
-
-        // Generate data
-        System.out.println("\n[STEP 1] Generating test data...");
+        System.out.println("Generating data...");
         DataGenerator.Pair[] allData = DataGenerator.generateData();
-
-        int N = 950000;
-        DataGenerator.Pair[] data = DataGenerator.getFirstK(allData, N);
-        System.out.println("Using first " + N + " key-value pairs for testing");
+        DataGenerator.Pair[] data = DataGenerator.getFirstK(allData, 950000);
 
         double[] loadFactors = {0.75, 0.80, 0.85, 0.90, 0.95};
-        int repetitions = 30;
 
-        System.out.println("\n[STEP 2] Testing at these load factors:");
-        for (double lf : loadFactors) {
-            System.out.println("  - " + (lf * 100) + "%");
+        DecimalFormat df = new DecimalFormat("0.00000");
+
+        System.out.println("\nAverage Search Time (milliseconds)");
+        System.out.println("-------------------------------------------------------");
+        System.out.printf("%-10s %-10s %-15s %-15s\n",
+                "Alpha(%)", "m", "OpenHash", "ChainedHash");
+        System.out.println("-------------------------------------------------------");
+
+        for (double alpha : loadFactors) {
+
+            int N = data.length;
+            int m = nextPrime((int) Math.ceil(N / alpha));
+            int itemsToInsert = (int) (alpha * m);
+
+            OpenHash open = new OpenHash(m);
+            ChainedHash chained = new ChainedHash(m);
+
+            for (int i = 0; i < itemsToInsert; i++) {
+                open.insert(data[i].key, data[i].value);
+                chained.insert(data[i].key, data[i].value);
+            }
+
+            Random rand = new Random();
+
+            long openTotal = 0;
+            long chainTotal = 0;
+
+            for (int r = 0; r < REPETITIONS; r++) {
+
+                int[] testKeys = new int[LOOKUPS_PER_RUN];
+
+                for (int i = 0; i < LOOKUPS_PER_RUN; i++) {
+                    testKeys[i] = data[rand.nextInt(itemsToInsert)].key;
+                }
+
+                long start = System.currentTimeMillis();
+                for (int key : testKeys) {
+                    open.lookup(key);
+                }
+                openTotal += (System.currentTimeMillis() - start);
+
+                start = System.currentTimeMillis();
+                for (int key : testKeys) {
+                    chained.lookup(key);
+                }
+                chainTotal += (System.currentTimeMillis() - start);
+            }
+
+            double openAvg = (double) openTotal / REPETITIONS;
+            double chainAvg = (double) chainTotal / REPETITIONS;
+
+            System.out.printf("%-10.0f %-10d %-15s %-15s\n",
+                    alpha * 100, m,
+                    df.format(openAvg),
+                    df.format(chainAvg));
         }
-        System.out.println("Each test will run " + repetitions + " repetitions");
-        System.out.println("Each repetition performs 30 random key lookups");
-
-        System.out.println("\n==================================================");
-        System.out.println("RESULTS TABLE");
-        System.out.println("==================================================");
-        System.out.printf("%-12s %-8s %-15s %-15s %-15s %-15s\n",
-                "Load Factor", "m", "Open Avg(ms)", "Open StdDev",
-                "Chain Avg(ms)", "Chain StdDev");
-        System.out.println("--------------------------------------------------------------------------------");
-
-        for (double loadFactor : loadFactors) {
-            runTest(data, loadFactor, repetitions, df);
-        }
-
-        System.out.println("\n==================================================");
-        System.out.println("EXPERIMENT COMPLETE");
-        System.out.println("==================================================");
     }
 
-    private static void runTest(DataGenerator.Pair[] data, double loadFactor,
-                                int reps, DecimalFormat df) {
-
-        int N = data.length;
-        int m = (int) Math.ceil(N / loadFactor);
-
-        while (!isPrime(m)) {
-            m++;
-        }
-
-        int itemsToInsert = (int) (loadFactor * m);
-        if (itemsToInsert > N) {
-            itemsToInsert = N;
-        }
-
-        System.out.printf("\nTesting at %.0f%% load factor...\n", loadFactor * 100);
-        System.out.println("  Table size m = " + m);
-        System.out.println("  Inserting " + itemsToInsert + " items");
-
-        // Use 300 keys temporarily to get measurable times
-        int[] testKeys = new int[300];  // INCREASED FROM 30 TO 300
-        Random rand = new Random();
-        for (int i = 0; i < 300; i++) {
-            testKeys[i] = data[rand.nextInt(itemsToInsert)].key;
-        }
-
-        double openTotalTime = 0;
-        double openTotalTimeSq = 0;
-        double chainTotalTime = 0;
-        double chainTotalTimeSq = 0;
-
-        // Track if lookups are working
-        int openSuccessCount = 0;
-        int chainSuccessCount = 0;
-
-        for (int rep = 0; rep < reps; rep++) {
-
-            OpenHash openTable = new OpenHash(m);
-            ChainedHash chainTable = new ChainedHash(m);
-
-            // Insert data
-            for (int i = 0; i < itemsToInsert; i++) {
-                openTable.insert(data[i].key, data[i].value);
-                chainTable.insert(data[i].key, data[i].value);
-            }
-
-            // DEBUG: Check load factors
-            if (rep == 0) {
-                System.out.println("    Open hash load factor: " + openTable.loadFactor());
-                System.out.println("    Chained hash load factor: " + chainTable.loadFactor());
-            }
-
-            // Test one key to verify lookup works
-            if (rep == 0) {
-                String openResult = openTable.lookup(testKeys[0]);
-                String chainResult = chainTable.lookup(testKeys[0]);
-                System.out.println("    Test key " + testKeys[0] +
-                        " - Open: " + (openResult != null ? "FOUND" : "MISSING") +
-                        ", Chain: " + (chainResult != null ? "FOUND" : "MISSING"));
-            }
-
-            // Time open hash
-            long start = System.currentTimeMillis();
-            for (int key : testKeys) {
-                String result = openTable.lookup(key);
-                if (result != null) openSuccessCount++;
-            }
-            long finish = System.currentTimeMillis();
-            double time = finish - start;
-
-            openTotalTime += time;
-            openTotalTimeSq += time * time;
-
-            // Time chained hash
-            start = System.currentTimeMillis();
-            for (int key : testKeys) {
-                String result = chainTable.lookup(key);
-                if (result != null) chainSuccessCount++;
-            }
-            finish = System.currentTimeMillis();
-            time = finish - start;
-
-            chainTotalTime += time;
-            chainTotalTimeSq += time * time;
-
-            shuffleArray(testKeys);
-        }
-
-        // Report success rates
-        int totalLookups = reps * 300;
-        System.out.println("    Open hash success rate: " + openSuccessCount + "/" + totalLookups);
-        System.out.println("    Chained hash success rate: " + chainSuccessCount + "/" + totalLookups);
-
-        double openAvg = openTotalTime / reps;
-        double openStdDev = Math.sqrt((openTotalTimeSq / reps) - (openAvg * openAvg));
-
-        double chainAvg = chainTotalTime / reps;
-        double chainStdDev = Math.sqrt((chainTotalTimeSq / reps) - (chainAvg * chainAvg));
-
-        System.out.printf("%-12.0f %-8d %-15s %-15s %-15s %-15s\n",
-                loadFactor * 100, m,
-                df.format(openAvg), df.format(openStdDev),
-                df.format(chainAvg), df.format(chainStdDev));
+    private static int nextPrime(int n) {
+        while (!isPrime(n)) n++;
+        return n;
     }
 
     private static boolean isPrime(int n) {
@@ -161,18 +84,9 @@ public class HashingExperiment {
         if (n % 2 == 0 || n % 3 == 0) return false;
 
         for (int i = 5; i * i <= n; i += 6) {
-            if (n % i == 0 || n % (i + 2) == 0) return false;
+            if (n % i == 0 || n % (i + 2) == 0)
+                return false;
         }
         return true;
-    }
-
-    private static void shuffleArray(int[] array) {
-        Random rand = new Random();
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = rand.nextInt(i + 1);
-            int temp = array[index];
-            array[index] = array[i];
-            array[i] = temp;
-        }
     }
 }
