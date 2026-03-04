@@ -1,7 +1,7 @@
 // ChainedHash.java
 import java.util.LinkedList;
 
-public class ChainHash {
+public class ChainHash { 
 
     private static class Node {
         int key;
